@@ -1,88 +1,89 @@
 import streamlit as st
+import pandas as pd
 import numpy as np
-from sklearn.preprocessing import MinMaxScaler
-from sklearn.model_selection import train_test_split
+import matplotlib.pyplot as plt
+from streamlit_option_menu import option_menu
 
-# === Tampilan Awal ===
-st.set_page_config(page_title="Prediksi Curah Hujan Surabaya", layout="centered")
-st.title("🌧️ Prediksi Curah Hujan di Surabaya")
-st.caption("Menggunakan LSTM + Genetic Algorithm | UI by Streamlit")
+# ==== Page Setup ====
+st.set_page_config(page_title="Prediksi Curah Hujan Surabaya", layout="wide")
 
-# ===== Custom CSS untuk Sidebar Ungu Elegan =====
+# ==== Custom CSS untuk Sidebar Ungu ====
 st.markdown("""
-<style>
-/* Warna sidebar */
-[data-testid="stSidebar"] {
-    background-color: #6a0dad; /* Ungu elegan */
-    color: white;
-}
-/* Warna teks sidebar */
-[data-testid="stSidebar"] .css-1cpxqw2 {
-    color: white;
-}
-/* Warna header sidebar */
-[data-testid="stSidebar"] h1, 
-[data-testid="stSidebar"] h2, 
-[data-testid="stSidebar"] h3, 
-[data-testid="stSidebar"] h4 {
-    color: white;
-}
-</style>
+    <style>
+    [data-testid="stSidebar"] {
+        background-color: #6a0dad;
+        color: white;
+    }
+    [data-testid="stSidebar"] h1, 
+    [data-testid="stSidebar"] h2, 
+    [data-testid="stSidebar"] h3,
+    [data-testid="stSidebar"] h4,
+    [data-testid="stSidebar"] .css-1cpxqw2,
+    [data-testid="stSidebar"] .css-10trblm {
+        color: white !important;
+    }
+    .block-container {
+        padding-top: 2rem;
+    }
+    </style>
 """, unsafe_allow_html=True)
 
-# === Upload Dataset ===
-uploaded_file = st.file_uploader("📂 Upload dataset curah hujan (.csv)", type=["csv"])
+# ==== Sidebar Menu ====
+with st.sidebar:
+    st.image("https://img.icons8.com/external-flat-juicy-fish/64/rain.png", width=40)
+    st.title("Dashboard Hujan")
+    menu = option_menu("Menu Utama", ["Upload Dataset", "Visualisasi", "Hasil Peramalan"],
+                       icons=["cloud-upload", "bar-chart-line", "activity"],
+                       menu_icon="list", default_index=0,
+                       styles={
+                           "container": {"padding": "5px", "background-color": "#6a0dad"},
+                           "icon": {"color": "white", "font-size": "20px"},
+                           "nav-link": {"color": "white", "font-size": "16px", "text-align": "left", "margin": "0px"},
+                           "nav-link-selected": {"background-color": "#a76ef4"},
+                       })
 
-if uploaded_file:
-    data = pd.read_csv(uploaded_file)
-    st.write("📊 Dataset:")
-    st.dataframe(data.head())
+# ==== Halaman: Upload Dataset ====
+if menu == "Upload Dataset":
+    st.header("📂 Upload Dataset Curah Hujan")
+    file = st.file_uploader("Upload file CSV berisi data curah hujan", type=["csv"])
+    
+    if file:
+        df = pd.read_csv(file)
+        st.success("✅ Dataset berhasil diunggah")
+        st.dataframe(df.head())
+    else:
+        st.info("Silakan unggah file .csv yang berisi data waktu dan curah hujan.")
 
-    # === Pilih Kolom Target (Curah Hujan) ===
-    target_col = st.selectbox("🎯 Pilih kolom target (Curah Hujan)", data.columns)
-
-    # === Preprocessing ===
-    scaler = MinMaxScaler()
-    scaled_data = scaler.fit_transform(data[[target_col]])
-
-    # Buat sequence untuk LSTM
-    def create_sequences(data, seq_length=10):
-        X, y = [], []
-        for i in range(len(data) - seq_length):
-            X.append(data[i:i+seq_length])
-            y.append(data[i+seq_length])
-        return np.array(X), np.array(y)
-
-    X, y = create_sequences(scaled_data)
-    X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, shuffle=False)
-
-    # === Model LSTM ===
-    model = Sequential()
-    model.add(LSTM(50, activation='relu', input_shape=(X_train.shape[1], X_train.shape[2])))
-    model.add(Dense(1))
-    model.compile(optimizer='adam', loss='mse')
-
-    if st.button("🚀 Latih Model LSTM"):
-        with st.spinner("Melatih model..."):
-            model.fit(X_train, y_train, epochs=10, verbose=0)
-        st.success("✅ Model selesai dilatih!")
-
-        # === Prediksi & Visualisasi ===
-        pred = model.predict(X_test)
-        pred_rescaled = scaler.inverse_transform(pred)
-        actual_rescaled = scaler.inverse_transform(y_test)
-
-        # Tampilkan Grafik
+# ==== Halaman: Visualisasi ====
+elif menu == "Visualisasi":
+    st.header("📈 Visualisasi Curah Hujan")
+    if "df" in locals():
         fig, ax = plt.subplots()
-        ax.plot(actual_rescaled, label='Aktual')
-        ax.plot(pred_rescaled, label='Prediksi')
-        ax.set_title("Prediksi vs Aktual Curah Hujan")
+        ax.plot(df.iloc[:, 0], df.iloc[:, 1], label="Curah Hujan", color="#6a0dad")
+        ax.set_xlabel("Tanggal")
+        ax.set_ylabel("Curah Hujan (mm)")
+        ax.set_title("Grafik Curah Hujan")
         ax.legend()
         st.pyplot(fig)
+    else:
+        st.warning("❗ Harap unggah dataset terlebih dahulu di menu 'Upload Dataset'.")
 
-else:
-    st.info("Silakan upload dataset CSV berisi data curah hujan (contoh kolom: tanggal, curah_hujan).")
+# ==== Halaman: Hasil Peramalan ====
+elif menu == "Hasil Peramalan":
+    st.header("🔮 Hasil Peramalan Curah Hujan")
+    st.markdown("Fitur ini akan menampilkan hasil prediksi dari model (misal LSTM).")
+    
+    # Contoh Dummy Output
+    prediksi_dummy = np.random.uniform(10, 100, size=7)
+    tanggal_dummy = pd.date_range(start=pd.Timestamp.today(), periods=7).strftime("%d %b %Y")
 
-# === Footer ===
+    pred_df = pd.DataFrame({
+        "Tanggal": tanggal_dummy,
+        "Prediksi Curah Hujan (mm)": np.round(prediksi_dummy, 2)
+    })
+
+    st.table(pred_df)
+
+# ==== Footer ====
 st.markdown("---")
-st.markdown("📍 Dienna Eries Linggarsari ")
+st.caption("🎓 Dibuat Dienna Eries Linggarsari ")
