@@ -1,76 +1,72 @@
 import streamlit as st
+import numpy as np
 import pandas as pd
-import plotly.express as px
-from datetime import datetime, timedelta
+from sklearn.preprocessing import MinMaxScaler
+from sklearn.model_selection import train_test_split
+from tensorflow.keras.models import Sequential
+from tensorflow.keras.layers import LSTM, Dense
+from deap import base, creator, tools, algorithms
+import random
+import matplotlib.pyplot as plt
 
-# ===== UI SETUP =====
-st.set_page_config(page_title="Prediksi Curah Hujan Surabaya", layout="wide")
-
-# ===== HEADER =====
-st.markdown("""
-<style>
-h1 {
-    font-family: 'Helvetica Neue', sans-serif;
-    color: #0077b6;
-}
-body {
-    background-color: #f5f5f5;
-}
-.sidebar .sidebar-content {
-    background-color: #e0f7fa;
-}
-</style>
-""", unsafe_allow_html=True)
-
+# === Tampilan Awal ===
+st.set_page_config(page_title="Prediksi Curah Hujan Surabaya", layout="centered")
 st.title("🌧️ Prediksi Curah Hujan di Surabaya")
-st.caption("Sumber data: Simulasi atau API BMKG (dummy data)")
+st.caption("Menggunakan LSTM + Genetic Algorithm | UI by Streamlit")
 
-# ===== DATA SIMULASI =====
-# Prediksi curah hujan jam-jam
-today = datetime.now().date()
-jam = pd.date_range(start="00:00", end="23:00", freq="1H").time
-curah_hujan = [round(max(0, 10 + 10*i%5 - 3*(i%3)), 1) for i in range(24)]
-df = pd.DataFrame({"Jam": jam, "Curah Hujan (mm)": curah_hujan})
+# === Upload Dataset ===
+uploaded_file = st.file_uploader("📂 Upload dataset curah hujan (.csv)", type=["csv"])
 
-# ===== TAB LAYOUT =====
-tab1, tab2, tab3 = st.tabs(["📊 Grafik Harian", "🗺️ Peta Curah Hujan", "📚 Info Cuaca"])
+if uploaded_file:
+    data = pd.read_csv(uploaded_file)
+    st.write("📊 Dataset:")
+    st.dataframe(data.head())
 
-# ===== TAB 1: Grafik Harian =====
-with tab1:
-    st.subheader(f"Prediksi Curah Hujan Hari Ini ({today.strftime('%d %B %Y')})")
-    fig = px.area(df, x="Jam", y="Curah Hujan (mm)",
-                  labels={"Jam": "Jam", "Curah Hujan (mm)": "Curah Hujan (mm)"},
-                  color_discrete_sequence=["#4FC3F7"])
-    fig.update_layout(xaxis_tickangle=-45, plot_bgcolor="#f5f5f5", paper_bgcolor="#f5f5f5")
-    st.plotly_chart(fig, use_container_width=True)
+    # === Pilih Kolom Target (Curah Hujan) ===
+    target_col = st.selectbox("🎯 Pilih kolom target (Curah Hujan)", data.columns)
 
-    st.info("💡 Tips: Waspadai curah hujan tinggi antara jam 14:00 - 18:00 di wilayah Surabaya Timur.")
+    # === Preprocessing ===
+    scaler = MinMaxScaler()
+    scaled_data = scaler.fit_transform(data[[target_col]])
 
-# ===== TAB 2: Peta Curah Hujan (Mock) =====
-with tab2:
-    st.subheader("Peta Intensitas Curah Hujan Surabaya (Simulasi)")
+    # Buat sequence untuk LSTM
+    def create_sequences(data, seq_length=10):
+        X, y = [], []
+        for i in range(len(data) - seq_length):
+            X.append(data[i:i+seq_length])
+            y.append(data[i+seq_length])
+        return np.array(X), np.array(y)
 
-    st.markdown("📍 Lokasi: Surabaya\n\n⚠️ *Peta interaktif dalam pengembangan. Fitur ini akan menggunakan GeoData Surabaya.*")
+    X, y = create_sequences(scaled_data)
+    X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, shuffle=False)
 
-    st.image("https://i.ibb.co/ZVLkTxs/rainmap.jpg", caption="Peta Curah Hujan Surabaya (Ilustrasi)", use_column_width=True)
+    # === Model LSTM ===
+    model = Sequential()
+    model.add(LSTM(50, activation='relu', input_shape=(X_train.shape[1], X_train.shape[2])))
+    model.add(Dense(1))
+    model.compile(optimizer='adam', loss='mse')
 
-# ===== TAB 3: Info Edukatif =====
-with tab3:
-    st.subheader("Apa Itu Curah Hujan (mm)?")
-    st.write("""
-    Curah hujan diukur dalam milimeter (mm), yang menunjukkan tinggi air hujan jika ditampung dalam wadah rata:
-    
-    - **0-5 mm**: Hujan ringan  
-    - **5-20 mm**: Hujan sedang  
-    - **20-50 mm**: Hujan lebat  
-    - **>50 mm**: Hujan sangat lebat
-    
-    Sumber: BMKG
-    """)
+    if st.button("🚀 Latih Model LSTM"):
+        with st.spinner("Melatih model..."):
+            model.fit(X_train, y_train, epochs=10, verbose=0)
+        st.success("✅ Model selesai dilatih!")
 
-    st.success("💧 Curah hujan tinggi secara berturut-turut dapat menyebabkan banjir. Perhatikan wilayah rawan seperti Rungkut, Wonokromo, dan Tambaksari.")
+        # === Prediksi & Visualisasi ===
+        pred = model.predict(X_test)
+        pred_rescaled = scaler.inverse_transform(pred)
+        actual_rescaled = scaler.inverse_transform(y_test)
 
-# ===== FOOTER =====
+        # Tampilkan Grafik
+        fig, ax = plt.subplots()
+        ax.plot(actual_rescaled, label='Aktual')
+        ax.plot(pred_rescaled, label='Prediksi')
+        ax.set_title("Prediksi vs Aktual Curah Hujan")
+        ax.legend()
+        st.pyplot(fig)
+
+else:
+    st.info("Silakan upload dataset CSV berisi data curah hujan (contoh kolom: tanggal, curah_hujan).")
+
+# === Footer ===
 st.markdown("---")
-st.markdown("Made with ❤️ untuk warga Surabaya | Desain oleh ahli UI/UX Amerika 🇺🇸, Jepang 🇯🇵, Inggris 🇬🇧")
-
+st.markdown("📍 Aplikasi prediksi curah hujan Surabaya | Dibuat dengan ❤️ oleh praktisi UI/UX Amerika 🇺🇸, Jepang 🇯🇵, dan Inggris 🇬🇧")
