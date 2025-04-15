@@ -63,3 +63,4 @@ else:
 
 # === Footer ===
 st.markdown("---")
+Dienna Eries Linggarsari
