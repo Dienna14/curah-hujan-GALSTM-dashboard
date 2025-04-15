@@ -8,6 +8,28 @@ st.set_page_config(page_title="Prediksi Curah Hujan Surabaya", layout="centered"
 st.title("🌧️ Prediksi Curah Hujan di Surabaya")
 st.caption("Menggunakan LSTM + Genetic Algorithm | UI by Streamlit")
 
+# ===== Custom CSS untuk Sidebar Ungu Elegan =====
+st.markdown("""
+<style>
+/* Warna sidebar */
+[data-testid="stSidebar"] {
+    background-color: #6a0dad; /* Ungu elegan */
+    color: white;
+}
+/* Warna teks sidebar */
+[data-testid="stSidebar"] .css-1cpxqw2 {
+    color: white;
+}
+/* Warna header sidebar */
+[data-testid="stSidebar"] h1, 
+[data-testid="stSidebar"] h2, 
+[data-testid="stSidebar"] h3, 
+[data-testid="stSidebar"] h4 {
+    color: white;
+}
+</style>
+""", unsafe_allow_html=True)
+
 # === Upload Dataset ===
 uploaded_file = st.file_uploader("📂 Upload dataset curah hujan (.csv)", type=["csv"])
 
