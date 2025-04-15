@@ -63,4 +63,4 @@ else:
 
 # === Footer ===
 st.markdown("---")
-Dienna Eries Linggarsari
+st.markdown("📍 Dienna Eries Linggarsari ")
