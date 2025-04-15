@@ -2,11 +2,6 @@ import streamlit as st
 import numpy as np
 from sklearn.preprocessing import MinMaxScaler
 from sklearn.model_selection import train_test_split
-from tensorflow.keras.models import Sequential
-from tensorflow.keras.layers import LSTM, Dense
-from deap import base, creator, tools, algorithms
-import random
-import matplotlib.pyplot as plt
 
 # === Tampilan Awal ===
 st.set_page_config(page_title="Prediksi Curah Hujan Surabaya", layout="centered")
