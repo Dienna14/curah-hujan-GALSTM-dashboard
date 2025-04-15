@@ -63,4 +63,3 @@ else:
 
 # === Footer ===
 st.markdown("---")
-st.markdown("📍 Aplikasi prediksi curah hujan Surabaya | Dibuat dengan ❤️ oleh praktisi UI/UX Amerika 🇺🇸, Jepang 🇯🇵, dan Inggris 🇬🇧")
