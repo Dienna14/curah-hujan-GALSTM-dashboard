@@ -5,85 +5,66 @@ import matplotlib.pyplot as plt
 from sklearn.metrics import mean_absolute_error, mean_squared_error
 from streamlit_option_menu import option_menu
 
-# ===== Setup UI Page =====
-st.set_page_config(page_title="Dashboard Prediksi Curah Hujan Surabaya", layout="wide")
+import streamlit as st
 
-# ===== Custom Style: Sidebar Purple =====
+# Konfigurasi halaman
+st.set_page_config(
+    page_title="Prediksi Curah Hujan Jawa Timur",
+    layout="wide"
+)
+
+# Gaya CSS kustom
 st.markdown("""
     <style>
-    [data-testid="stSidebar"] {
-        background-color: #6a0dad;
-        color: white;
-    }
-    [data-testid="stSidebar"] h1, 
-    [data-testid="stSidebar"] h2, 
-    [data-testid="stSidebar"] h3,
-    [data-testid="stSidebar"] h4,
-    [data-testid="stSidebar"] .css-1cpxqw2 {
-        color: white !important;
-    }
+        .sidebar .sidebar-content {
+            background-color: #cc66cc;
+            padding: 0px;
+        }
+
+        .sidebar .css-1d391kg {
+            padding-top: 0rem;
+        }
+
+        .sidebar .stButton>button {
+            width: 100%;
+            margin-bottom: 10px;
+            background-color: white;
+            color: black;
+            border-radius: 20px;
+        }
+
+        .main-header {
+            background-color: #ff66cc;
+            color: black;
+            font-size: 26px;
+            text-align: center;
+            padding: 20px;
+            font-weight: bold;
+        }
     </style>
 """, unsafe_allow_html=True)
 
-# ===== Sidebar Menu =====
-with st.sidebar:
-    st.image("https://img.icons8.com/external-flat-juicy-fish/64/rain.png", width=40)
-    st.title("Prediksi Curah Hujan")
-    menu = option_menu("Navigasi", ["Dataset", "Visualisasi", "Model"],
-        icons=["cloud-upload", "bar-chart", "cpu"],
-        menu_icon="cast", default_index=0,
-        styles={
-            "container": {"padding": "5px", "background-color": "#6a0dad"},
-            "icon": {"color": "white", "font-size": "18px"},
-            "nav-link": {"color": "white", "font-size": "16px"},
-            "nav-link-selected": {"background-color": "#a76ef4"},
-        }
-    )
+# Sidebar dengan menu navigasi
+st.sidebar.markdown("## ")
+menu = st.sidebar.radio("Navigasi", ["Home", "Upload Data", "Preprocessing Data", "Pemodelan", "Visualisasi"])
 
-# ===== Session State (simpan data) =====
-if 'df' not in st.session_state:
-    st.session_state.df = None
+# Header utama
+st.markdown('<div class="main-header">Selamat Datang di Web Prediksi Curah Hujan Jawa Timur</div>', unsafe_allow_html=True)
 
-# ===== PAGE: Dataset =====
-if menu == "Dataset":
-    st.header("📂 Upload Dataset Curah Hujan Surabaya")
-    uploaded_file = st.file_uploader("Unggah file CSV", type=["csv"])
-
-    if uploaded_file:
+# Konten utama berdasarkan menu yang dipilih
+if menu == "Home":
+    st.write("Ini adalah halaman beranda. Silakan gunakan menu di sebelah kiri untuk navigasi.")
+elif menu == "Upload Data":
+    uploaded_file = st.file_uploader("Unggah dataset curah hujan (CSV)", type=["csv"])
+    if uploaded_file is not None:
+        st.success("File berhasil diunggah!")
+        import pandas as pd
         df = pd.read_csv(uploaded_file)
-        st.session_state.df = df
-        st.success("✅ Dataset berhasil diunggah")
-        st.dataframe(df.head())
-    else:
-        st.info("Silakan unggah dataset dengan kolom curah hujan.")
-
-# ===== PAGE: Visualisasi =====
+        st.dataframe(df)
+elif menu == "Preprocessing Data":
+    st.write("Halaman untuk preprocessing data (misalnya normalisasi, missing value, dll).")
+elif menu == "Pemodelan":
+    st.write("Halaman ini akan menampilkan hasil pemodelan GA-LSTM.")
 elif menu == "Visualisasi":
-    st.header("📈 Visualisasi Data Curah Hujan")
+    st.write("Visualisasi prediksi curah hujan dan estimasi risiko banjir.")
 
-    if st.session_state.df is not None:
-        df = st.session_state.df
-
-        col_date = st.selectbox("Pilih kolom tanggal", df.columns, index=0)
-        col_rain = st.selectbox("Pilih kolom curah hujan", df.columns, index=1)
-
-        fig, ax = plt.subplots()
-        ax.plot(df[col_date], df[col_rain], color="#6a0dad", label="Curah Hujan")
-        ax.set_xlabel("Tanggal")
-        ax.set_ylabel("Curah Hujan (mm)")
-        ax.set_title("Grafik Curah Hujan Harian")
-        ax.legend()
-        st.pyplot(fig)
-
-    else:
-        st.warning("⚠️ Belum ada dataset yang diunggah.")
-
-# ===== PAGE: Model GA-LSTM =====
-elif menu == "Model":
-    st.header("🤖 Evaluasi Model GA-LSTM")
-
-    if st.session_state.df is not None:
-        df = st.session_state.df
-
-        st.subheader("📊 Metode: Genetic Algorithm + LSTM")
-        st.markdown
