@@ -33,7 +33,7 @@ if menu == "Beranda":
     st.title("Prediksi Curah Hujan Harian Menggunakan GA-LSTM")
     st.markdown("""
     **GA-LSTM** (Genetic Algorithm - Long Short-Term Memory) adalah metode hybrid yang memanfaatkan kekuatan optimasi Genetic Algorithm dan kemampuan prediktif LSTM untuk menghasilkan prediksi curah hujan yang lebih akurat.
-    
+
     Silakan unggah data Anda dengan format Excel (.xlsx).
     """)
     uploaded_file = st.file_uploader("Upload file Excel", type=["xlsx"])
@@ -51,7 +51,9 @@ elif menu == "Preprocessing":
         df = st.session_state.df.copy()
         df['RR'] = df['RR'].astype(str).str.replace(r'[^0-9.-]', '', regex=True)
         df['RR'] = pd.to_numeric(df['RR'], errors='coerce').fillna(0)
-        df['Tanggal'] = pd.to_datetime(df['Tanggal']) if 'Tanggal' in df.columns else pd.date_range(start='2025-01-01', periods=len(df))
+
+        # Ganti tanggal menjadi 01-01-2020
+        df['Tanggal'] = pd.date_range(start='2020-01-01', periods=len(df))
 
         data_asli = df['RR'].values.reshape(-1, 1)
         scaler = MinMaxScaler()
@@ -115,7 +117,7 @@ elif menu == "Hasil Pemodelan":
         ax.legend()
         st.pyplot(fig)
 
-        # Prediksi 14 hari ke depan
+        # Prediksi 14 hari ke depan mulai dari 01-01-2025
         input_data = st.session_state.scaled_data[-7:].reshape(1, 7, 1)
         preds = []
         for _ in range(14):
@@ -124,8 +126,7 @@ elif menu == "Hasil Pemodelan":
             input_data = np.append(input_data[:,1:,:], [[[pred[0][0]]]], axis=1)
 
         future = scaler.inverse_transform(np.array(preds).reshape(-1,1)).flatten()
-        last_date = st.session_state.df['TANGGAL'].max()
-        future_dates = [last_date + timedelta(days=i) for i in range(1, 15)]
+        future_dates = [datetime(2025, 1, 1) + timedelta(days=i) for i in range(14)]
         future_df = pd.DataFrame({'Tanggal': future_dates, 'Prediksi Curah Hujan (mm)': future})
 
         st.subheader("Prediksi Curah Hujan 14 Hari Kedepan")
