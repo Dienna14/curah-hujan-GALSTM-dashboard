@@ -1,9 +1,8 @@
-# force-reinstall
---upgrade --no-cache-dir
 streamlit
 pandas
-numpy==1.26.4
-tensorflow==2.15.0
+numpy==1.24.3
+tensorflow==2.14.0
+ml_dtypes==0.2.0
 protobuf==4.21.6
 matplotlib
 seaborn
