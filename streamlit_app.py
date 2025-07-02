@@ -51,7 +51,7 @@ elif menu == "Preprocessing":
         df = st.session_state.df.copy()
         df['RR'] = df['RR'].astype(str).str.replace(r'[^0-9.-]', '', regex=True)
         df['RR'] = pd.to_numeric(df['RR'], errors='coerce').fillna(0)
-        df['TANGGAL'] = pd.to_datetime(df['Tanggal']) if 'Tanggal' in df.columns else pd.date_range(start='2025-01-01', periods=len(df))
+        df['Tanggal'] = pd.to_datetime(df['Tanggal']) if 'Tanggal' in df.columns else pd.date_range(start='2025-01-01', periods=len(df))
 
         data_asli = df['RR'].values.reshape(-1, 1)
         scaler = MinMaxScaler()
@@ -124,10 +124,9 @@ elif menu == "Hasil Pemodelan":
             input_data = np.append(input_data[:,1:,:], [[[pred[0][0]]]], axis=1)
 
         future = scaler.inverse_transform(np.array(preds).reshape(-1,1)).flatten()
-        last_date = st.session_state.df['Tanggal'].max()
-        future_dates = [last_date + timedelta(days=i) for i in range(1,15)]
+        last_date = st.session_state.df['TANGGAL'].max()
+        future_dates = [last_date + timedelta(days=i) for i in range(1, 15)]
         future_df = pd.DataFrame({'Tanggal': future_dates, 'Prediksi Curah Hujan (mm)': future})
-
 
         st.subheader("Prediksi Curah Hujan 14 Hari Kedepan")
         st.dataframe(future_df)
