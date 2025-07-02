@@ -2,9 +2,9 @@ streamlit
 pandas
 numpy
 scikit-learn
-tensorflow>=2.13,<2.16
+tensorflow==2.14.0
+ml_dtypes==0.2.0
 matplotlib
 seaborn
 deap
 openpyxl
-ml_dtypes
