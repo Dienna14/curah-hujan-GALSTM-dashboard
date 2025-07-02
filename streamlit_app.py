@@ -9,19 +9,10 @@ from tensorflow.keras.models import Sequential
 from tensorflow.keras.layers import LSTM, Dense
 from datetime import datetime, timedelta
 
-# Set Page Configuration
 st.set_page_config(page_title="GA-LSTM Rainfall Forecasting", layout="wide")
 
-# Initialize Navigation State
-if "menu" not in st.session_state:
-    st.session_state.menu = "Beranda"
-
 # Sidebar Navigation
-menu = st.sidebar.selectbox(
-    "Navigasi", 
-    ["Beranda", "Preprocessing", "Hasil Pemodelan", "RMFE"], 
-    index=["Beranda", "Preprocessing", "Hasil Pemodelan", "RMFE"].index(st.session_state.menu)
-)
+menu = st.sidebar.selectbox("Navigasi", ["Beranda", "Preprocessing", "Hasil Pemodelan", "RMFE"])
 
 # Global Variables
 if "df" not in st.session_state:
@@ -52,11 +43,6 @@ if menu == "Beranda":
         st.success("File berhasil diupload!")
         st.write("5 data pertama:")
         st.dataframe(df.head())
-
-    st.markdown("---")
-    if st.button("Lanjut ke Preprocessing"):
-        st.session_state.menu = "Preprocessing"
-        st.experimental_rerun()
 
 # ========== Preprocessing ==========
 elif menu == "Preprocessing":
@@ -100,11 +86,6 @@ elif menu == "Preprocessing":
     else:
         st.warning("Silakan upload data terlebih dahulu di halaman Beranda.")
 
-    st.markdown("---")
-    if st.button("Lanjut ke Hasil Pemodelan"):
-        st.session_state.menu = "Hasil Pemodelan"
-        st.experimental_rerun()
-
 # ========== Hasil Pemodelan ==========
 elif menu == "Hasil Pemodelan":
     st.title("Hasil Pemodelan GA-LSTM")
@@ -134,15 +115,16 @@ elif menu == "Hasil Pemodelan":
         ax.legend()
         st.pyplot(fig)
 
+        # Prediksi 14 hari ke depan
         input_data = st.session_state.scaled_data[-7:].reshape(1, 7, 1)
         preds = []
         for _ in range(14):
             pred = model.predict(input_data)
             preds.append(pred[0][0])
-            input_data = np.append(input_data[:, 1:, :], [[[pred[0][0]]]], axis=1)
+            input_data = np.append(input_data[:,1:,:], [[[pred[0][0]]]], axis=1)
 
-        future = scaler.inverse_transform(np.array(preds).reshape(-1, 1)).flatten()
-        future_dates = [datetime.today() + timedelta(days=i) for i in range(1, 15)]
+        future = scaler.inverse_transform(np.array(preds).reshape(-1,1)).flatten()
+        future_dates = [datetime.today() + timedelta(days=i) for i in range(1,15)]
         future_df = pd.DataFrame({'Tanggal': future_dates, 'Prediksi Curah Hujan (mm)': future})
 
         st.subheader("Prediksi Curah Hujan 14 Hari Kedepan")
@@ -158,11 +140,6 @@ elif menu == "Hasil Pemodelan":
         st.session_state.prediction = future_df
     else:
         st.warning("Data belum diproses. Silakan lakukan preprocessing terlebih dahulu.")
-
-    st.markdown("---")
-    if st.button("Lanjut ke RMFE"):
-        st.session_state.menu = "RMFE"
-        st.experimental_rerun()
 
 # ========== Halaman RMFE ==========
 elif menu == "RMFE":
@@ -202,8 +179,3 @@ elif menu == "RMFE":
         st.session_state.risk_df = df_pred
     else:
         st.warning("Prediksi belum tersedia. Silakan jalankan pemodelan terlebih dahulu.")
-
-    st.markdown("---")
-    if st.button("Kembali ke Beranda"):
-        st.session_state.menu = "Beranda"
-        st.experimental_rerun()
