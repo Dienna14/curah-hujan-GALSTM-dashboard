@@ -5,3 +5,4 @@ tensorflow
 deap
 streamlit
 matplotlib
+seaborn
