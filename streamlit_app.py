@@ -51,7 +51,7 @@ elif menu == "Preprocessing":
         df = st.session_state.df.copy()
         df['RR'] = df['RR'].astype(str).str.replace(r'[^0-9.-]', '', regex=True)
         df['RR'] = pd.to_numeric(df['RR'], errors='coerce').fillna(0)
-        df['Tanggal'] = pd.to_datetime(df['Tanggal']) if 'Tanggal' in df.columns else pd.date_range(start='2025-01-01', periods=len(df))
+        df['TANGGAL'] = pd.to_datetime(df['Tanggal']) if 'Tanggal' in df.columns else pd.date_range(start='2025-01-01', periods=len(df))
 
         data_asli = df['RR'].values.reshape(-1, 1)
         scaler = MinMaxScaler()
