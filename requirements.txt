@@ -1,8 +1,10 @@
-numpy
-pandas
-scikit-learn
-tensorflow
-deap
 streamlit
+pandas
+numpy
+scikit-learn
+tensorflow>=2.13,<2.16
 matplotlib
 seaborn
+deap
+openpyxl
+ml_dtypes
